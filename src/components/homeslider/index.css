@@ -1,0 +1,20 @@
+    .swiper-button-prev,
+    .swiper-button-next {
+        color: #000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 30px;
+        height: 20px;
+        border-radius: 100%;
+min-width: 45px;        background-color: rgba(255, 255, 255, 0.8);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+       
+    }
+  .swiper-button-prev::after,
+    .swiper-button-next::after{
+        top: 50%;
+        transform: translateY(-50%);
+        height: 40px;
+        width: 40px;
+    }
