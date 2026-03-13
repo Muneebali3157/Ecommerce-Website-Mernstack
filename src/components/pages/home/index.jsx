@@ -52,58 +52,38 @@ const Home = ({ onOpenCart }) => {
     setSelectedProduct(product);
   };
 
-  const handleAddToCart = (product, quantity) => {
-    console.log("Add to cart:", product.title, quantity);
-    onOpenCart?.(); // Open cart in header
-  };
-
-  const handleBuyNow = (product, quantity) => {
-    console.log("Buy Now:", product.title, quantity);
-    // You can implement checkout here
-  };
-
-  // Handle URL parameters on component mount and URL changes
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const tab = params.get("tab");
-    
-    // Set tab from URL if it exists
-    if (tab && tabMap[tab.toLowerCase()] !== undefined) {
-      setValue(tabMap[tab.toLowerCase()]);
-    }
-    
-    // Handle scrolling to popular-products section
-    if (location.hash === '#popular-products') {
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
-        const section = document.getElementById("popular-products");
-        if (section) {
-          // Account for fixed header height
-          const headerOffset = 100;
-          const elementPosition = section.getBoundingClientRect().top;
-          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-          
-          window.scrollTo({
-            top: offsetPosition,
-            behavior: "smooth"
-          });
-        }
-      }, 200);
-    }
-  }, [location]);
-
-  // Listen for category selection from search
-  useEffect(() => {
-    const handleCategorySelect = (event) => {
-      const { category } = event.detail;
-      if (tabMap[category] !== undefined) {
-        setValue(tabMap[category]);
+  console.log("Current location:", location.pathname);
+  console.log("Current hash:", location.hash);
+  console.log("Current search:", location.search);
+  
+  const params = new URLSearchParams(location.search);
+  const tab = params.get("tab");
+  console.log("Tab from URL:", tab);
+  
+  // Set tab from URL if it exists
+  if (tab && tabMap[tab.toLowerCase()] !== undefined) {
+    setValue(tabMap[tab.toLowerCase()]);
+  }
+  
+  // Handle scrolling to popular-products section
+  if (location.hash === '#popular-products') {
+    console.log("Scrolling to popular products");
+    setTimeout(() => {
+      const section = document.getElementById("popular-products");
+      if (section) {
+        const headerOffset = 100;
+        const elementPosition = section.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+        
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth"
+        });
       }
-    };
-
-    window.addEventListener('categorySelected', handleCategorySelect);
-    return () => window.removeEventListener('categorySelected', handleCategorySelect);
-  }, []);
+    }, 200);
+  }
+}, [location]);
 
   return (
     <>
@@ -120,8 +100,9 @@ const Home = ({ onOpenCart }) => {
         <Addbannerslider items={3} />
       </section>
 
+      {/* This is the section we want to scroll to - ID matches navigation */}
       <section id="popular-products" className="py-5 bg-white mt-5 w-full m-6 scroll-mt-24">
-        <div className="container-fluid w-full flex justify-between items-center">
+        <div className="container-fluid w-full flex justify-between items-center ">
           <div className="left-sec">
             <h2 className="text-2xl font-bold text-gray-800">Popular products</h2>
             <p>Don't miss out on our most loved items!</p>

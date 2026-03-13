@@ -1,37 +1,75 @@
 import React, { useState, useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { CartContext } from "../../context/CartContext";
-import Checkout from "./Checkout";
+import OrderForm from "../order/OrderForm"; // Import OrderForm
+
 const ProductDetail = ({ product, isOpen, onClose }) => {
   const [quantity, setQuantity] = useState(1);
-  const [showCheckout, setShowCheckout] = useState(false);
+  const [showOrderForm, setShowOrderForm] = useState(false);
   const { user } = useContext(AuthContext);
   const { addToCart } = useContext(CartContext);
 
   if (!isOpen || !product) return null;
 
-  const handleAdd = () => {
+  const handleAddToCart = () => {
     if (!user) {
       alert("Please login or register to continue!");
       return;
     }
-    addToCart(product, quantity);
-    alert("Product added to cart successfully!");
+    
+    const productToAdd = {
+      id: product.id,
+      title: product.title,
+      price: parseFloat(product.price),
+      img: product.img,
+      category: product.category
+    };
+    
+    addToCart(productToAdd, quantity);
+    
+    // Show success message
+    const toast = document.createElement('div');
+    toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+    toast.textContent = `${product.title} added to cart!`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+    
     onClose();
   };
 
-  const handleBuy = () => {
+  const handleOrderNow = () => {
     if (!user) {
       alert("Please login or register to continue!");
       return;
     }
-    // Open checkout modal instead of just adding to cart
-    setShowCheckout(true);
+    
+    // Create a product item in the same format as cart items
+    const orderItem = {
+      id: product.id,
+      title: product.title,
+      price: parseFloat(product.price),
+      img: product.img,
+      category: product.category,
+      quantity: quantity
+    };
+    
+    setShowOrderForm(true);
   };
 
-  const handleCloseCheckout = () => {
-    setShowCheckout(false);
-    onClose(); // Close the product detail modal as well
+  const handleOrderComplete = (orderData) => {
+    // Show success message
+    const toast = document.createElement('div');
+    toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+    toast.textContent = `Order placed successfully! Total: $${orderData.total.toFixed(2)}`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+    
+    setShowOrderForm(false);
+    onClose();
+  };
+
+  const handleCloseOrderForm = () => {
+    setShowOrderForm(false);
   };
 
   // Calculate total price
@@ -39,9 +77,8 @@ const ProductDetail = ({ product, isOpen, onClose }) => {
 
   return (
     <>
-      {/* Product Detail Modal */}
       <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 pt-24">
-        <div className="bg-white rounded-lg shadow-lg w-[90%] max-w-md relative p-6 flex flex-col items-center mt-20 m-5">
+        <div className="bg-white rounded-lg shadow-lg w-[90%] max-w-md relative p-6 flex flex-col items-center mt-20">
           <button
             onClick={onClose}
             className="absolute top-2 right-2 text-2xl font-bold hover:text-red-500"
@@ -52,7 +89,7 @@ const ProductDetail = ({ product, isOpen, onClose }) => {
           <img
             src={product.img}
             alt={product.title}
-            className="w-70 h-40 object-cover rounded-md mb-4 hover:scale-105 transition"
+            className="w-60 h-50 object-cover rounded-md mb-4 hover:scale-105 transition"
           />
 
           <h2 className="text-xl font-bold mb-2 text-center">{product.title}</h2>
@@ -76,29 +113,38 @@ const ProductDetail = ({ product, isOpen, onClose }) => {
             />
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 w-full">
             <button
-              onClick={handleAdd}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+              onClick={handleAddToCart}
+              className="flex-1 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
             >
               Add to Cart
             </button>
             <button
-              onClick={handleBuy}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
+              onClick={handleOrderNow}
+              className="flex-1 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
             >
-              Buy Now
+              Order Now
             </button>
           </div>
         </div>
       </div>
 
-      {/* Checkout Modal */}
-      {showCheckout && (
-        <Checkout 
-          product={product}
-          quantity={quantity}
-          onClose={handleCloseCheckout}
+      {/* Order Form Modal */}
+      {showOrderForm && (
+        <OrderForm
+          items={[{
+            id: product.id,
+            title: product.title,
+            price: parseFloat(product.price),
+            img: product.img,
+            category: product.category,
+            quantity: quantity
+          }]}
+          user={user}
+          onClose={handleCloseOrderForm}
+          onOrderComplete={handleOrderComplete}
+          orderType="single"
         />
       )}
     </>

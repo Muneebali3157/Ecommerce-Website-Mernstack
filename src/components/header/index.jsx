@@ -7,9 +7,10 @@ import { MdOutlineShoppingCart, MdDelete } from "react-icons/md";
 import { GoGitCompare } from "react-icons/go";
 import { FaRegHeart } from "react-icons/fa";
 import Tooltip from "@mui/material/Tooltip";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import Checkout from "../product/Checkout";
+import OrderForm from "../order/OrderForm";
 import { CartContext } from "../../context/CartContext";
 
 const Header = () => {
@@ -25,58 +26,47 @@ const Header = () => {
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [showOrderForm, setShowOrderForm] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [orderType, setOrderType] = useState('single');
   const [displayName, setDisplayName] = useState('');
+
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Debug logs
-  useEffect(() => {
-    console.log("Current user object:", user);
-    console.log("Cart items in Header:", cartItems);
-    console.log("Cart count:", getCartCount());
-  }, [user, cartItems]);
-
-  // Extract display name from user object
   useEffect(() => {
     if (user) {
-      const name = 
-        user.name || 
-        user.user?.name || 
-        user.displayName || 
-        user.username || 
-        user.fullName ||
-        (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : null) ||
-        user.firstName ||
-        user.email?.split('@')[0] ||
-        'User';
-      
+      const name = user.name || user.email?.split('@')[0] || 'User';
       setDisplayName(name);
-    } else {
-      setDisplayName('');
     }
   }, [user]);
 
   const cartCount = getCartCount();
   const cartTotal = getCartTotal();
 
-  const handleBuyNow = (item) => {
+  const handleOrderNow = (item) => {
     if (!user) {
-      alert("Please login or register to continue!");
+      alert("Please login to continue");
       setIsCartOpen(false);
-      navigate("/login");
+      navigate("/login", { 
+        state: { from: { pathname: location.pathname } }
+      });
       return;
     }
     
     setSelectedItem(item);
-    setShowCheckout(true);
+    setOrderType('single');
+    setShowOrderForm(true);
     setIsCartOpen(false);
   };
 
-  const handleBuyAll = () => {
+  const handleOrderAll = () => {
     if (!user) {
-      alert("Please login or register to continue!");
+      alert("Please login to continue");
       setIsCartOpen(false);
-      navigate("/login");
+      navigate("/login", { 
+        state: { from: { pathname: location.pathname } }
+      });
       return;
     }
 
@@ -85,14 +75,32 @@ const Header = () => {
       return;
     }
 
-    setSelectedItem(cartItems[0]);
-    setShowCheckout(true);
+    setOrderType('all');
+    setShowOrderForm(true);
     setIsCartOpen(false);
   };
 
-  const handleCloseCheckout = () => {
-    setShowCheckout(false);
+  const handleOrderComplete = (orderData) => {
+    alert("Order placed successfully!");
+    
+    if (orderType === 'all') {
+      clearCart();
+    } else if (selectedItem) {
+      removeFromCart(selectedItem.id);
+    }
+    
+    setShowOrderForm(false);
     setSelectedItem(null);
+  };
+
+  const handleCloseOrderForm = () => {
+    setShowOrderForm(false);
+    setSelectedItem(null);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
   };
 
   return (
@@ -142,7 +150,7 @@ const Header = () => {
                       Welcome {displayName}
                     </span>
                     <button
-                      onClick={logout}
+                      onClick={handleLogout}
                       className="text-[14px] font-[550] hover:text-red-500 ml-2"
                     >
                       Logout
@@ -232,13 +240,9 @@ const Header = () => {
                               {/* Product Details */}
                               <div className="flex-1 min-w-0">
                                 <div className="flex justify-between">
-                                  <Link 
-                                    to={`/product/${item.id}`}
-                                    className="font-medium text-sm hover:text-blue-600 truncate"
-                                    onClick={() => setIsCartOpen(false)}
-                                  >
+                                  <span className="font-medium text-sm">
                                     {item.title}
-                                  </Link>
+                                  </span>
                                   <button
                                     onClick={() => removeFromCart(item.id)}
                                     className="text-gray-400 hover:text-red-500 ml-2"
@@ -271,16 +275,16 @@ const Header = () => {
                                 </div>
                               </div>
 
-                              {/* Item Total and Buy Button */}
+                              {/* Item Total and Order Button */}
                               <div className="text-right flex-shrink-0">
                                 <div className="font-medium text-sm mb-2">
                                   ${(item.price * item.quantity).toFixed(2)}
                                 </div>
                                 <button
-                                  onClick={() => handleBuyNow(item)}
+                                  onClick={() => handleOrderNow(item)}
                                   className="bg-green-500 text-white text-xs px-3 py-1 rounded hover:bg-green-600 transition whitespace-nowrap"
                                 >
-                                  Buy Now
+                                  Order Now
                                 </button>
                               </div>
                             </div>
@@ -292,23 +296,18 @@ const Header = () => {
                     {/* Cart Footer */}
                     {cartItems.length > 0 && (
                       <div className="p-4 border-t bg-gray-50 rounded-b-lg">
-                        {/* Subtotal */}
                         <div className="flex justify-between items-center mb-3">
                           <span className="font-medium">Subtotal:</span>
                           <span className="font-bold text-green-600">
                             ${cartTotal.toFixed(2)}
                           </span>
                         </div>
-
-                        {/* Buy All Button */}
                         <button
-                          onClick={handleBuyAll}
+                          onClick={handleOrderAll}
                           className="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600 transition font-medium"
                         >
-                          Buy All Items (${cartTotal.toFixed(2)})
+                          Order All Items (${cartTotal.toFixed(2)})
                         </button>
-
-                        {/* Continue Shopping Link */}
                         <div className="text-center mt-3">
                           <button
                             onClick={() => setIsCartOpen(false)}
@@ -317,11 +316,6 @@ const Header = () => {
                             Continue Shopping
                           </button>
                         </div>
-
-                        {/* Shipping Note */}
-                        <p className="text-xs text-gray-500 text-center mt-3">
-                          Shipping and taxes calculated at checkout
-                        </p>
                       </div>
                     )}
                   </div>
@@ -339,7 +333,18 @@ const Header = () => {
         <Checkout 
           product={selectedItem}
           quantity={selectedItem.quantity}
-          onClose={handleCloseCheckout}
+          onClose={() => setShowCheckout(false)}
+        />
+      )}
+
+      {/* Order Form Modal */}
+      {showOrderForm && (
+        <OrderForm
+          items={orderType === 'single' ? [selectedItem] : cartItems}
+          user={user}
+          onClose={handleCloseOrderForm}
+          onOrderComplete={handleOrderComplete}
+          orderType={orderType}
         />
       )}
     </header>

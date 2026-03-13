@@ -23,9 +23,9 @@ export const Search = () => {
     { name: "Jewelry", value: "jewelry" }
   ];
 
-  // All products data
+  // All products data (add your full products array here)
   const allProducts = [
-    // ... (your products array)
+    // ... your products array
   ];
 
   // Close suggestions when clicking outside
@@ -68,16 +68,8 @@ export const Search = () => {
     setSearchTerm('');
     
     if (suggestion.type === 'category') {
-      // Navigate to home page with tab parameter and hash to popular products section
-      navigate(`/?tab=${suggestion.value}#popular-products`);
-      
-      // Small delay to ensure navigation completes before scrolling
-      setTimeout(() => {
-        const element = document.getElementById('popular-products');
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
+      // FIXED: Navigate to /home instead of /
+      navigate(`/home?tab=${suggestion.value}#popular-products`);
     } else {
       // Navigate to product detail page
       navigate(`/product/${suggestion.id}`);
@@ -88,7 +80,8 @@ export const Search = () => {
     e.preventDefault();
     if (searchTerm.trim()) {
       setShowSuggestions(false);
-      navigate(`/search?q=${searchTerm}`);
+      // FIXED: Navigate to /home with search parameter
+      navigate(`/home?search=${searchTerm}#popular-products`);
     }
   };
 
